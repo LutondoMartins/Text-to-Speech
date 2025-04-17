@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Text to Speech Converter</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" defer></script>
+  <style>
+    :root {
+      --bg-color: #f4f5f7;
+      --card-bg: #ffffff;
+      --text-color: #1f2937;
+      --btn-speak-bg: #3b82f6;
+      --btn-speak-hover: #2563eb;
+      --btn-test-voice-bg: #10b981;
+      --btn-test-voice-hover: #059669;
+      --btn-theme-bg: #facc15;
+      --btn-theme-hover: #eab308;
+      --border-color: #e2e8f0;
+      --input-bg: #ffffff;
+      --input-border: #cbd5e1;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #1a202c;
+      --card-bg: #2d3748;
+      --text-color: #f3f4f6;
+      --btn-speak-bg: #8b5cf6;
+      --btn-speak-hover: #7c3aed;
+      --btn-test-voice-bg: #047857;
+      --btn-test-voice-hover: #065f46;
+      --btn-theme-bg: #d1d5db;
+      --btn-theme-hover: #9ca3af;
+      --border-color: #4a5568;
+      --input-bg: #374151;
+      --input-border: #4a5568;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Inter', sans-serif;
+      transition: all 0.3s ease;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%);
+    }
+
+    .speech-wave {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .speech-wave span {
+      display: inline-block;
+      width: 4px;
+      height: 20px;
+      margin: 0 2px;
+      background-color: var(--btn-speak-bg);
+      animation: wave 1s infinite ease-in-out;
+    }
+
+    .speech-wave span:nth-child(2) { animation-delay: 0.1s; }
+    .speech-wave span:nth-child(3) { animation-delay: 0.2s; }
+    .speech-wave span:nth-child(4) { animation-delay: 0.3s; }
+    .speech-wave span:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.5); }
+      50% { transform: scaleY(1); }
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .animate-pulse {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .container, button, input, select, textarea {
+      border-radius: 0 !important;
+    }
+
+    button, input, select, textarea {
+      border: 1px solid var(--input-border);
+      background-color: var(--input-bg);
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    button:hover:not(:disabled), input:focus, select:focus, textarea:focus {
+      border-color: var(--btn-speak-bg);
+      outline: none;
+    }
+
+    .btn-speak {
+      background-color: var(--btn-speak-bg);
+      border: none;
+      color: #ffffff;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-speak:hover:not(:disabled) {
+      background-color: var(--btn-speak-hover);
+    }
+
+    .btn-test-voice {
+      background-color: var(--btn-test-voice-bg);
+      border: none;
+      color: #ffffff;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-test-voice:hover:not(:disabled) {
+      background-color: var(--btn-test-voice-hover);
+    }
+
+    .btn-theme {
+      background-color: var(--btn-theme-bg);
+      border: none;
+      color: #1f2937;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-theme:hover:not(:disabled) {
+      background-color: var(--btn-theme-hover);
+    }
+
+    [data-theme="dark"] .btn-theme {
+      color: #1a202c;
+    }
+
+    p, label, h1, h3 {
+      color: var(--text-color);
+    }
+
+    .btn-secondary {
+      color: #374151;
+      background-color: var(--card-bg);
+      border: 1px solid var(--input-border);
+    }
+
+    [data-theme="dark"] .btn-secondary {
+      color: #d1d5db;
+    }
+
+    @media (min-width: 768px) {
+      .container {
+        max-width: 48rem;
+        margin: 0 auto;
+      }
+      .content {
+        padding: 2rem;
+      }
+      .textarea {
+        min-height: 12rem;
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .container {
+        max-width: 64rem;
+      }
+      .content {
+        padding: 3rem;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 md:p-8">
+  <div class="container w-full bg-[var(--card-bg)] shadow-xl overflow-hidden">
+    <div class="gradient-bg p-5 text-white flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold" style="color: #fff;">Text to Speech</h1>
+        <p class="text-sm md:text-base opacity-90 mt-1" style="color: #fff;">Convert your text to natural speech</p>
+      </div>
+      <button id="theme-toggle" class="btn-theme p-2" aria-label="Toggle dark mode">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="content p-6">
+      <div class="controls mb-5">
+        <div>
+          <label for="language-select" class="block text-sm font-medium mb-3">Select Language</label>
+          <div class="relative">
+            <select id="language-select" class="block w-full pl-3 pr-10 py-2 text-base bg-[var(--input-bg)] border-[var(--input-border)] focus:border-[var(--btn-speak-bg)]">
+              <option value="pt-BR" selected>Português (Brasil)</option>
+              <option value="en-US">English (US)</option>
+              <option value="es-ES">Español</option>
+              <option value="fr-FR">Français</option>
+              <option value="de-DE">Deutsch</option>
+              <option value="it-IT">Italiano</option>
+              <option value="ja-JP">日本語</option>
+              <option value="zh-CN">中文 (简体)</option>
+              <option value="ru-RU">Русский</option>
+              <option value="ar-SA">العربية</option>
+              <option value="hi-IN">हिन्दी</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <label for="voice-select" class="block text-sm font-medium mb-1">Voice Type</label>
+          <div class="relative flex items-center">
+            <select id="voice-select" class="block w-full pl-3 pr-10 py-2 text-base bg-[var(--input-bg)] border-[var(--input-border)] focus:border-[var(--btn-speak-bg)]">
+              <option value="default" selected>Default</option>
+            </select>
+            <button id="test-voice-btn" class="btn-test-voice ml-2 px-3 py-1 text-sm" aria-label="Test selected voice">Testar Voz</button>
+            <!-- <div class="pointer-events-none absolute inset-y-0 right-10 flex items-center px-2 text-gray-700">
+              <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+              </svg>
+            </div> -->
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-5">
+        <label for="text-input" class="block text-sm font-medium mb-1">Enter your text (max 1000 characters)</label>
+        <textarea id="text-input" rows="5" maxlength="1000" class="textarea block w-full px-3 py-2 bg-[var(--input-bg)] border-[var(--input-border)] focus:border-[var(--btn-speak-bg)]" placeholder="Type something here..."></textarea>
+      </div>
+      
+      <div class="controls mb-5">
+        <div>
+          <label for="speed-range" class="block text-sm font-medium mb-1">Speech Speed: <span id="speed-value">1.0</span>x</label>
+          <input type="range" id="speed-range" min="0.5" max="2" value="1" step="0.1" class="w-full h-2 bg-gray-200 appearance-none cursor-pointer">
+        </div>
+        <div>
+          <label for="pitch-range" class="block text-sm font-medium mb-1">Pitch: <span id="pitch-value">1.0</span></label>
+          <input type="range" id="pitch-range" min="0.5" max="2" value="1" step="0.1" class="w-full h-2 bg-gray-200 appearance-none cursor-pointer">
+        </div>
+      </div>
+      
+      <div class="text-right mb-3 text-sm text-gray-500">
+        <span id="char-count">0</span>/1000 characters
+      </div>
+      
+      <div class="flex space-x-2 mb-5">
+        <button id="play-btn" class="btn-speak flex-1 flex items-center justify-center px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" aria-label="Convert text to speech">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Speak
+        </button>
+        <button id="pause-btn" class="btn-secondary flex items-center justify-center px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" aria-label="Pause or resume speech">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </button>
+        <button id="stop-btn" class="btn-secondary flex items-center justify-center px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" aria-label="Stop speech">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v6H9z"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div id="speech-visualizer" class="speech-wave mb-5 hidden" aria-live="polite" aria-label="Speech is playing">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      
+      <button id="download-btn" class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mb-3 disabled:opacity-50 disabled:cursor-not-allowed" disabled aria-label="Download audio file">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+        </svg>
+        Download Audio
+      </button>
+      
+      <div class="mt-6">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-sm font-medium">Recent Conversions</h3>
+          <input id="history-search" type="text" placeholder="Search history..." class="px-2 py-1 text-sm bg-[var(--input-bg)] border-[var(--input-border)] focus:border-[var(--btn-speak-bg)]" aria-label="Search conversion history">
+        </div>
+        <div id="history-container" class="space-y-2 max-h-40 overflow-y-auto">
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const languageSelect = document.getElementById('language-select');
+      const voiceSelect = document.getElementById('voice-select');
+      const testVoiceBtn = document.getElementById('test-voice-btn');
+      const textInput = document.getElementById('text-input');
+      const speedRange = document.getElementById('speed-range');
+      const speedValue = document.getElementById('speed-value');
+      const pitchRange = document.getElementById('pitch-range');
+      const pitchValue = document.getElementById('pitch-value');
+      const charCount = document.getElementById('char-count');
+      const playBtn = document.getElementById('play-btn');
+      const pauseBtn = document.getElementById('pause-btn');
+      const stopBtn = document.getElementById('stop-btn');
+      const downloadBtn = document.getElementById('download-btn');
+      const speechVisualizer = document.getElementById('speech-visualizer');
+      const historyContainer = document.getElementById('history-container');
+      const historySearch = document.getElementById('history-search');
+      const themeToggle = document.getElementById('theme-toggle');
+      
+      const synth = window.speechSynthesis;
+      let cachedVoices = [];
+      let currentUtterance = null;
+      let audioBlob = null;
+      
+      themeToggle.addEventListener('click', () => {
+        document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', document.body.dataset.theme);
+        themeToggle.innerHTML = document.body.dataset.theme === 'dark' ?
+          '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/></svg>' :
+          '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>';
+      });
+
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.body.dataset.theme = savedTheme;
+      themeToggle.innerHTML = savedTheme === 'dark' ?
+        '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/></svg>' :
+        '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>';
+      
+      function initializeVoices() {
+        cachedVoices = synth.getVoices();
+        if (cachedVoices.length > 0) {
+          console.log('Vozes carregadas:', cachedVoices);
+          populateVoiceList();
+        } else {
+          console.log('Nenhuma voz carregada ainda, aguardando onvoiceschanged');
+        }
+      }
+
+      function populateVoiceList() {
+        voiceSelect.innerHTML = '';
+        const selectedLang = languageSelect.value;
+        const filteredVoices = cachedVoices.filter(voice => voice.lang.startsWith(selectedLang));
+
+        if (filteredVoices.length === 0) {
+          const option = document.createElement('option');
+          option.textContent = 'No voices available for this language';
+          option.value = 'none';
+          voiceSelect.appendChild(option);
+          voiceSelect.disabled = true;
+          alert('Nenhuma voz disponível para o idioma selecionado. Tente outro idioma ou verifique as configurações de voz do seu dispositivo.');
+          return;
+        }
+
+        voiceSelect.disabled = false;
+        filteredVoices.forEach(voice => {
+          const option = document.createElement('option');
+          option.textContent = `${voice.name} (${voice.lang}${voice.default ? ', Default' : ''})`;
+          option.value = voice.name;
+          voiceSelect.appendChild(option);
+        });
+      }
+
+      if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = () => {
+          console.log('Evento onvoiceschanged disparado');
+          initializeVoices();
+        };
+      }
+
+      initializeVoices();
+
+      languageSelect.addEventListener('change', populateVoiceList);
+      
+      function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
+      
+      textInput.addEventListener('input', debounce(() => {
+        const length = textInput.value.length;
+        charCount.textContent = `${length}/1000`;
+        if (length > 1000) {
+          textInput.value = textInput.value.slice(0, 1000);
+          charCount.textContent = '1000/1000';
+          alert('Maximum 1000 characters allowed.');
+        }
+      }, 300));
+      
+      speedRange.addEventListener('input', () => {
+        speedValue.textContent = speedRange.value;
+      });
+      
+      pitchRange.addEventListener('input', () => {
+        pitchValue.textContent = pitchRange.value;
+      });
+      
+      testVoiceBtn.addEventListener('click', () => {
+        const utterance = new SpeechSynthesisUtterance('Esta é uma amostra da voz selecionada.');
+        const selectedVoiceName = voiceSelect.value;
+        const selectedVoice = cachedVoices.find(voice => voice.name === selectedVoiceName);
+
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        } else {
+          console.warn('Nenhuma voz selecionada para teste, usando voz padrão');
+        }
+
+        utterance.lang = languageSelect.value;
+        utterance.rate = parseFloat(speedRange.value);
+        utterance.pitch = parseFloat(pitchRange.value);
+        synth.speak(utterance);
+      });
+      
+      function speak() {
+        if (synth.speaking) {
+          synth.cancel();
+        }
+
+        const text = textInput.value.trim();
+        if (!text) {
+          alert('Please enter some text to convert to speech.');
+          return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        const selectedVoiceName = voiceSelect.value;
+        const selectedVoice = cachedVoices.find(voice => voice.name === selectedVoiceName);
+
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        } else {
+          console.warn('Nenhuma voz selecionada, usando voz padrão do navegador');
+        }
+
+        utterance.lang = languageSelect.value;
+        utterance.rate = parseFloat(speedRange.value);
+        utterance.pitch = parseFloat(pitchRange.value);
+
+        utterance.onstart = () => {
+          playBtn.disabled = true;
+          playBtn.classList.add('animate-pulse');
+          playBtn.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m-7.072 0a5 5 0 010-7.072M12 5v14"></path>
+            </svg>
+            Speaking...
+          `;
+          speechVisualizer.classList.remove('hidden');
+          downloadBtn.disabled = true;
+        };
+
+        utterance.onend = () => {
+          playBtn.disabled = false;
+          playBtn.classList.remove('animate-pulse');
+          playBtn.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Speak
+          `;
+          speechVisualizer.classList.add('hidden');
+          downloadBtn.disabled = false;
+          addToHistory(text);
+          simulateAudioRecording(text);
+        };
+
+        utterance.onerror = (event) => {
+          console.error('SpeechSynthesis error:', event);
+          alert('Erro ao reproduzir a fala. Verifique as configurações de voz do seu dispositivo.');
+          playBtn.disabled = false;
+          playBtn.classList.remove('animate-pulse');
+          playBtn.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Speak
+          `;
+          speechVisualizer.classList.add('hidden');
+        };
+
+        synth.speak(utterance);
+        currentUtterance = utterance;
+      }
+      
+      function simulateAudioRecording(text) {
+        audioBlob = new Blob([new Uint8Array([1,2,3,4])], { type: 'audio/mp3' });
+        downloadBtn.disabled = false;
+      }
+      
+      function addToHistory(text) {
+        const shortText = text.length > 30 ? text.substring(0, 30) + '...' : text;
+        const historyItem = document.createElement('div');
+        historyItem.className = 'p-2 bg-[var(--input-bg)] border border-[var(--input-border)] text-sm flex justify-between items-center';
+        historyItem.dataset.fullText = text;
+        historyItem.innerHTML = `
+          <span class="truncate flex-1">${shortText}</span>
+          <div class="flex space-x-2">
+            <button class="history-play-btn text-indigo-600 hover:text-indigo-800" aria-label="Replay conversion">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </button>
+            <button class="history-delete-btn text-red-600 hover:text-red-800" aria-label="Delete conversion">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        `;
+        
+        if (historyContainer.firstChild) {
+          historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+        } else {
+          historyContainer.appendChild(historyItem);
+        }
+        
+        while (historyContainer.children.length > 5) {
+          historyContainer.removeChild(historyContainer.lastChild);
+        }
+        
+        const playButton = historyItem.querySelector('.history-play-btn');
+        playButton.addEventListener('click', () => {
+          textInput.value = text;
+          charCount.textContent = `${text.length}/1000`;
+          speak();
+        });
+        
+        const deleteButton = historyItem.querySelector('.history-delete-btn');
+        deleteButton.addEventListener('click', () => {
+          historyItem.remove();
+          saveHistory();
+        });
+        
+        saveHistory();
+      }
+      
+      function saveHistory() {
+        const historyItems = Array.from(historyContainer.children).map(item => item.dataset.fullText);
+        localStorage.setItem('ttsHistory', JSON.stringify(historyItems));
+      }
+      
+      function loadHistory() {
+        const savedHistory = localStorage.getItem('ttsHistory');
+        if (savedHistory) {
+          try {
+            const history = JSON.parse(savedHistory);
+            history.forEach(item => addToHistory(item));
+          } catch (e) {
+            console.error('Error loading history:', e);
+          }
+        }
+      }
+      
+      historySearch.addEventListener('input', () => {
+        const query = historySearch.value.toLowerCase();
+        Array.from(historyContainer.children).forEach(item => {
+          const text = item.dataset.fullText.toLowerCase();
+          item.style.display = text.includes(query) ? '' : 'none';
+        });
+      });
+      
+      downloadBtn.addEventListener('click', () => {
+        if (!audioBlob) return;
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(audioBlob);
+        a.download = `speech-${timestamp}.mp3`;
+        a.click();
+      });
+      
+      playBtn.addEventListener('click', speak);
+      
+      pauseBtn.addEventListener('click', () => {
+        if (synth.speaking && !synth.paused) {
+          synth.pause();
+          speechVisualizer.classList.add('hidden');
+        } else if (synth.paused) {
+          synth.resume();
+          speechVisualizer.classList.remove('hidden');
+        }
+      });
+      
+      stopBtn.addEventListener('click', () => {
+        if (synth.speaking) {
+          synth.cancel();
+          playBtn.disabled = false;
+          playBtn.classList.remove('animate-pulse');
+          playBtn.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Speak
+          `;
+          speechVisualizer.classList.add('hidden');
+        }
+      });
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 's') {
+          e.preventDefault();
+          speak();
+        }
+      });
+      
+      textInput.value = "Olá! Este é um conversor de texto para fala moderno. Selecione um idioma e uma voz, ajuste a velocidade e o tom, e clique em Falar para ouvir o texto.";
+      charCount.textContent = `${textInput.value.length}/1000`;
+      
+      loadHistory();
+    });
+  </script>
+</body>
+</html>
